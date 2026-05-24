@@ -1,36 +1,36 @@
 # HW00 — MyDreamTimeTableApp
 
-První domácí úkol pro **PB178 Programování v jazyce C#** (FI MUNI, jaro 2026).
-Autor: J. Prosecký.
+First homework for **PB178 Programming in C#** (FI MUNI, spring 2026).
+Author: J. Prosecký.
 
-Konzolová aplikace v .NET 9, jejímž cílem bylo procvičit základy C#: třídy, vlastnosti, konstruktory, kolekce a práci s typy z `System` (např. `TimeOnly`, `TimeSpan`, `DayOfWeek`).
+A .NET 9 console application whose goal was to practice C# fundamentals: classes, properties, constructors, collections and working with built-in types from `System` (e.g. `TimeOnly`, `TimeSpan`, `DayOfWeek`).
 
-## Zadání
+## Assignment
 
-Vymodelovat vlastní rozvrh přednášek a seminářů — vytvořit datový model pro předmět, seminární skupinu a celkový týdenní rozvrh, a v `Main` ho naplnit ukázkovými daty.
+Model a personal weekly class schedule — design a data model for a subject, a seminar group and the overall weekly timetable, and populate it with sample data in `Main`.
 
-## Doménový model
+## Domain model
 
-- **`Subject`** — předmět: kód, název, čas začátku/konce (z nichž se počítá `Duration`), vyučující, pole `SeminarGroup`.
-- **`SeminarGroup`** — seminární skupina: číslo a seznam tutorů.
-- **`Timetable`** — kontejner mapující `DayOfWeek` na seznam `Subject` (slovník), s metodami `SetDay` a `GetDaySchedule`.
+- **`Subject`** — a subject: code, name, start/end time (used to compute `Duration`), teacher, array of `SeminarGroup`s.
+- **`SeminarGroup`** — a seminar group: number and a list of tutors.
+- **`Timetable`** — a container mapping `DayOfWeek` to a list of `Subject`s (dictionary-backed), with `SetDay` and `GetDaySchedule`.
 
-## Spuštění
+## Run
 
 ```bash
 cd MyDreamTimeTableApp
 dotnet run --project MyDreamTimeTableApp
 ```
 
-Aplikace nemá interaktivní výstup — slouží jako demonstrace datového modelu, výstupy lze odkomentovat v `Program.cs`.
+The app has no interactive output — it serves as a demonstration of the data model; sample outputs can be uncommented in `Program.cs`.
 
-## Struktura
+## Layout
 
 ```
 MyDreamTimeTableApp/
 ├── MyDreamTimeTableApp.sln
 └── MyDreamTimeTableApp/
-    ├── Program.cs         (ukázkové naplnění rozvrhu)
+    ├── Program.cs         (sample timetable population)
     ├── Timetable.cs
     ├── Subject.cs
     └── SeminarGroup.cs

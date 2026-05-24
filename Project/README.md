@@ -1,72 +1,72 @@
 # LibSearch
 
-Semestrální projekt pro **PB178 Programování v jazyce C#**, FI MUNI, jaro 2026.
-Autor: J. Prosecký, UČO 550554.
+Semestral project for **PB178 Programming in C#**, FI MUNI, spring 2026.
+Author: J. Prosecký, UČO 550554.
 
-Desktopová **.NET MAUI** aplikace pro **sémantické vyhledávání pasáží v textech**. Uživatel nahraje `.txt` soubor, ten je odeslán do lokálně běžícího REST API (FastAPI + ChromaDB + český embedding model `retromae-small-cs`) pro indexaci pomocí vector embeddings, a v aplikaci pak může pokládat dotazy v přirozeném jazyce, ukládat zajímavé pasáže s poznámkami a tagy, prohlížet historii vyhledávání a exportovat výsledky.
+A **.NET MAUI** desktop application for **semantic passage search in text**. The user uploads a `.txt` file, which is sent to a locally running REST API (FastAPI + ChromaDB + the Czech embedding model `retromae-small-cs`) for indexing via vector embeddings. The user can then ask natural-language questions, save interesting passages with notes and tags, browse their search history and export the results.
 
-Na rozdíl od fulltextového vyhledávače LibSearch hledá podle **významu**, ne podle shody slov — dotaz "kde se hrdina poprvé bojí?" najde pasáž popisující strach i bez výskytu slova "strach".
+Unlike a full-text search, LibSearch matches by **meaning**, not by string occurrence — a query like "where does the hero first feel fear?" can find the relevant passage even when the word "fear" never appears.
 
-## Funkční rozsah
+## Feature scope
 
-1. **Autentizace** — registrace, přihlášení, odhlášení. Lokální uživatelé, hesla hashovaná BCryptem (`BCrypt.Net-Next`).
-2. **Knihovna** — upload `.txt`, přejmenování, smazání, seznam vlastních dokumentů. Soubory pod `%LocalAppData%\<AppId>\library\{userId}\{docId}.txt`.
-3. **Sémantické vyhledávání** — dotaz v přirozeném jazyce nad jedním dokumentem; výsledky jsou pasáže seřazené podle relevance (cosine distance). Každý dokument = vlastní Chroma kolekce `user{userId}-doc{docId}`.
-4. **Reader** — celý text dokumentu po chuncích, klik na výsledek scrolluje a zvýrazní odpovídající chunk.
-5. **Uložené pasáže** — uložení výsledku s volitelnou poznámkou a tagy (čárkou oddělené).
-6. **Historie vyhledávání** — každý dotaz je zalogován (timestamp, dokument, prompt, počet výsledků); tlačítko "Rerun" dotaz znovu spustí.
-7. **Filtry** — na History i Saved Passages: dokument, datum (toggle on/off), tagy (jen na Saved), free-text contains.
-8. **Export** — uložené pasáže lze exportovat do `.txt`, `.md`, `.json`. Cílová cesta `Dokumenty\`.
-9. **Stats** — celkový počet dotazů, dotazy dnes, počet uložených pasáží, top 5 nejčastěji prohledávaných dokumentů.
+1. **Authentication** — register, login, logout. Local users only, passwords hashed with BCrypt (`BCrypt.Net-Next`).
+2. **Library** — upload `.txt`, rename, delete, list of the user's own documents. Files stored under `%LocalAppData%\<AppId>\library\{userId}\{docId}.txt`.
+3. **Semantic search** — natural-language query over a single document; results are passages sorted by relevance (cosine distance). Each document gets its own Chroma collection `user{userId}-doc{docId}`.
+4. **Reader** — full document text rendered chunk-by-chunk; clicking a result scrolls to and highlights the corresponding chunk.
+5. **Saved passages** — save a result with an optional note and tags (comma-separated).
+6. **Search history** — every query is logged (timestamp, document, prompt, result count); a "Rerun" button re-executes the query.
+7. **Filters** — on both History and Saved Passages: document, date (togglable), tags (Saved only), free-text contains.
+8. **Export** — saved passages can be exported to `.txt`, `.md`, `.json`. The file is written to `Documents\`.
+9. **Stats** — total query count, queries today, number of saved passages, top 5 most-searched documents.
 
-## Architektura
+## Architecture
 
 ```
 LibSearch.sln
 └── LibSearch.App                  (MAUI, target: net9.0-windows10.0.19041.0)
     ├── App.xaml(.cs), AppShell.xaml(.cs)
-    ├── MauiProgram.cs             (DI registrace)
-    ├── Converters/                (XAML IValueConverter implementace)
+    ├── MauiProgram.cs             (DI registrations)
+    ├── Converters/                (XAML IValueConverter implementations)
     ├── Data/AppDbContext.cs       (EF Core SQLite, OnModelCreating)
     ├── Models/Entities/           (User, TextDocument, SearchHistoryItem,
     │                               SavedPassage, Tag, SavedPassageTag)
-    ├── Services/                  (auth, session, library, HTTP klient, export, stats)
+    ├── Services/                  (auth, session, library, HTTP client, export, stats)
     ├── ViewModels/                (CommunityToolkit.Mvvm)
-    ├── Views/                     (XAML stránky a reusable ContentViews)
+    ├── Views/                     (XAML pages and reusable ContentViews)
     ├── Platforms/Windows/
     └── Resources/
 ```
 
-**Klíčové volby:**
+**Key choices:**
 
-- **MVVM pattern** — `Views/` (XAML, code-behind jen pro triviální wiring), `ViewModels/` s `CommunityToolkit.Mvvm` (`[ObservableProperty]`, `[RelayCommand]`), `Services/` injectované konstruktorem. Žádná business logika v code-behind.
-- **DI** přes built-in `Microsoft.Extensions.DependencyInjection` v `MauiProgram.cs` — VMs registrovány jako transient, služby (auth, library, HTTP klient) jako singleton/scoped podle potřeby.
-- **Persistence** — SQLite přes EF Core, `AppDbContext` v `Data/`. DB soubor: `%LocalAppData%\<AppId>\libsearch.db`. Unique index na `User.Username` a kompozit `(OwnerId, Name)` na `Tag`.
-- **HTTP klient** — `HttpClient` přes `IHttpClientFactory` (`Microsoft.Extensions.Http`), zabalený do `ILibSearchClient`.
-- **Navigace** — MAUI Shell, routy registrované v `AppShell.xaml.cs`.
+- **MVVM pattern** — `Views/` (XAML, code-behind only for trivial wiring), `ViewModels/` with `CommunityToolkit.Mvvm` (`[ObservableProperty]`, `[RelayCommand]`), `Services/` injected via constructor. No business logic in code-behind.
+- **DI** via the built-in `Microsoft.Extensions.DependencyInjection` in `MauiProgram.cs` — VMs registered as transient, services (auth, library, HTTP client) as singleton/scoped as appropriate.
+- **Persistence** — SQLite via EF Core, `AppDbContext` in `Data/`. DB file: `%LocalAppData%\<AppId>\libsearch.db`. Unique index on `User.Username` and a composite `(OwnerId, Name)` on `Tag`.
+- **HTTP client** — `HttpClient` via `IHttpClientFactory` (`Microsoft.Extensions.Http`), wrapped behind `ILibSearchClient`.
+- **Navigation** — MAUI Shell, routes registered in `AppShell.xaml.cs`.
 
 ### Async correctness
 
-Async kód byl explicitní požadavek zadání a sylabus jej vyžaduje "korektně":
+Proper async usage was an explicit assignment requirement and the syllabus demands it be "correct":
 
-- Všechna I/O používá `async Task` / `async Task<T>`. Žádné `.Result` / `.Wait()` / `.GetAwaiter().GetResult()`.
-- Žádné `async void` mimo UI event handlery, které okamžitě delegují na command.
-- HTTP volání akceptují a předávají `CancellationToken`.
-- `SearchViewModel` vlastní `CancellationTokenSource`, který cancelluje předchozí běžící dotaz při startu nového searche nebo při odchodu ze stránky.
-- EF Core volání jsou `ToListAsync` / `FirstOrDefaultAsync` / `SaveChangesAsync`.
-- File IO přes `File.ReadAllTextAsync` / `WriteAllTextAsync`.
+- All I/O is `async Task` / `async Task<T>`. No `.Result` / `.Wait()` / `.GetAwaiter().GetResult()`.
+- No `async void` outside UI event handlers that immediately delegate to a command.
+- HTTP calls accept and forward a `CancellationToken`.
+- `SearchViewModel` owns a `CancellationTokenSource` that cancels the previous in-flight query when a new search starts or the page disappears.
+- EF Core calls use `ToListAsync` / `FirstOrDefaultAsync` / `SaveChangesAsync`.
+- File IO uses `File.ReadAllTextAsync` / `WriteAllTextAsync`.
 
-## Prerekvizity
+## Prerequisites
 
-- **.NET 9 SDK** s nainstalovaným MAUI workloadem (`dotnet workload install maui-windows`).
-- **Docker Desktop** pro běh API serveru.
+- **.NET 9 SDK** with the MAUI workload installed (`dotnet workload install maui-windows`).
+- **Docker Desktop** for running the API server.
 - Windows 10 1809+ (build 17763+).
 
 ## API server (LibSearch backend)
 
-Aplikace volá REST API, které musí běžet lokálně nebo dostupně po síti (např. Tailscale). Backend je samostatný projekt (FastAPI + ChromaDB + Czech embedding model `retromae-small-cs`, autor: Jakub Mazel) — LibSearch je jeho desktopový klient.
+The app calls a REST API that must be reachable locally or over the network (e.g. via Tailscale). The backend is a separate project (FastAPI + ChromaDB + Czech embedding model `retromae-small-cs`, author: Jakub Mazel) — LibSearch is its desktop client.
 
-Spuštění serveru:
+Starting the server:
 
 ```bash
 cd path/to/project-api-server
@@ -75,54 +75,54 @@ curl http://localhost:8080/test-connection/
 # -> {"result":"OK"}
 ```
 
-Endpointy používané klientem:
+Endpoints used by the client:
 
-| Metoda | Endpoint | Účel |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/test-connection/` | health-check |
-| `POST` | `/ingest/` | body `{collection, document_id, text}` → chunking + embedding + uložení do Chromy |
-| `GET` | `/query/` | body `{collection, prompt}` → semantic search, vrací seřazené pasáže |
-| `DELETE`| `/collection/{name}` | odstranění kolekce při smazání dokumentu |
+| `GET` | `/test-connection/` | health check |
+| `POST` | `/ingest/` | body `{collection, document_id, text}` → chunk + embed + store in Chroma |
+| `GET` | `/query/` | body `{collection, prompt}` → semantic search, returns ranked passages |
+| `DELETE`| `/collection/{name}` | drop a collection when its document is deleted |
 
-### Base URL klienta
+### Client base URL
 
-V `Services/LibSearchOptions.cs` je defaultní URL `http://localhost:8080`. Pokud server neběží lokálně (např. na jiném stroji přes Tailscale), uprav před buildem:
+`Services/LibSearchOptions.cs` defaults to `http://localhost:8080`. If the server runs on a different host (e.g. another machine over Tailscale), edit before building:
 
 ```csharp
 public string BaseUrl { get; set; } = "http://archlinux:8080";
 ```
 
-## Spuštění aplikace
+## Running the app
 
-V Rider / Visual Studio otevři `LibSearch.sln` a spusť `LibSearch.App` (Windows Machine).
+In Rider / Visual Studio open `LibSearch.sln` and launch `LibSearch.App` (Windows Machine).
 
-Z CLI:
+From the CLI:
 
 ```bash
 dotnet build LibSearch.sln
 dotnet run --project LibSearch.App
 ```
 
-## První použití
+## First-time use
 
-1. Spusť API server (`docker compose up -d` v adresáři backendu).
-2. Spusť LibSearch aplikaci.
-3. Klikni "Create account", zadej username (min. 3 znaky) a heslo (min. 6 znaků).
-4. V Library klikni "Upload .txt", vyber soubor — proběhne kopie do interního úložiště a ingest na API (může pár vteřin trvat, indikátor progressu je viditelný).
-5. Klikni na dokument v seznamu — otevře se Reader.
-6. Vlevo je celý text po chuncích, vpravo searchbar — napiš dotaz a stiskni Enter / Search.
-7. Klikni "Show in text" u výsledku, scroll skočí a chunk se zvýrazní žlutě.
-8. Klikni "Save" u výsledku, zadej poznámku a tagy, klikni Save.
-9. Z Library: tlačítka History / Saved / Stats / Logout.
+1. Start the API server (`docker compose up -d` in the backend directory).
+2. Start the LibSearch app.
+3. Click "Create account", enter a username (3+ chars) and password (6+ chars).
+4. In the Library click "Upload .txt", pick a file — the file is copied into internal storage and ingested via the API (this can take a few seconds; a progress indicator is shown).
+5. Click a document in the list — the Reader opens.
+6. The full text is on the left (chunked), the search bar is on the right — type a query and hit Enter / Search.
+7. Click "Show in text" on a result, the scroll position jumps and the chunk is highlighted in yellow.
+8. Click "Save" on a result, enter a note and tags, click Save.
+9. From the Library: buttons for History / Saved / Stats / Logout.
 
-## Schema changes (vývojářům)
+## Schema changes (for developers)
 
-Aplikace volá `db.Database.EnsureCreated()` při startu. Pro 2denní termín jsme záměrně nevytvářeli EF migrations — pokud změníš entity, smaž `%LocalAppData%\<AppId>\libsearch.db` a po dalším startu se vytvoří nová schéma. Pro produkční nasazení by bylo nutné nahradit `EnsureCreated` za `Database.MigrateAsync()` a generovat migrations přes `dotnet ef migrations add`.
+The app calls `db.Database.EnsureCreated()` at startup. For a 2-day deadline we deliberately did not generate EF migrations — if you change entities, delete `%LocalAppData%\<AppId>\libsearch.db` and a fresh schema will be created on the next start. For a production setup `EnsureCreated` would be replaced with `Database.MigrateAsync()` and migrations generated via `dotnet ef migrations add`.
 
-## Rozsah kurzu
+## Course scope
 
-Projekt používá pouze techniky pokryté v PB178: console IO, kolekce, generika, delegáty, pattern matching, streams, MAUI events/layout, MVVM, threads/tasks/async, EF Core, LINQ. Žádný Reactive Extensions, MediatR, AutoMapper ani jiný DI container mimo built-in `Microsoft.Extensions.DependencyInjection`.
+The project only uses techniques covered in PB178: console IO, collections, generics, delegates, pattern matching, streams, MAUI events/layout, MVVM, threads/tasks/async, EF Core, LINQ. No Reactive Extensions, MediatR, AutoMapper or other DI container beyond the built-in `Microsoft.Extensions.DependencyInjection`.
 
 ## AI usage disclosure
 
-Při vývoji projektu byl použit AI asistent (Anthropic Claude) pro scaffolding kódu, návrh struktury a urychlení rutinních úkolů (definice entit, boilerplate ViewModelů, XAML templates). Veškerý vygenerovaný kód byl autorem zkontrolován, upraven a integrován. AI nepsalo projekt autonomně — návrh celkové architektury, výběr knihoven, definice funkčního scopu, ladění a integrace s vlastním backendem jsou autorská práce. Tato poznámka splňuje požadavek kurzu na disclosure použití generativních AI nástrojů.
+During the development of this project an AI assistant (Anthropic Claude) was used for code scaffolding, structural suggestions and speeding up routine work (entity definitions, ViewModel boilerplate, XAML templates). All generated code was reviewed, adjusted and integrated by the author. The AI did not produce the project autonomously — the overall architectural design, library selection, functional scope, debugging and integration with the custom backend are the author's own work. This note satisfies the course requirement to disclose the use of generative AI tools.

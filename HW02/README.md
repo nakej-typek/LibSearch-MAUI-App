@@ -1,20 +1,20 @@
 # HW02 — CrossStichDrawer
 
-Třetí domácí úkol pro **PB178 Programování v jazyce C#** (FI MUNI, jaro 2026).
-Autor: J. Prosecký.
+Third homework for **PB178 Programming in C#** (FI MUNI, spring 2026).
+Author: J. Prosecký.
 
-Desktopová **.NET MAUI** aplikace (`net10.0-windows10.0.19041.0`, volitelně iOS/MacCatalyst) pro návrh vzorů pro křížkovou výšivku. Cílem úkolu bylo procvičit MAUI, **MVVM pattern** (CommunityToolkit.Mvvm), data binding, XAML, custom layouty a práci se souborovým systémem.
+A **.NET MAUI** desktop application (`net10.0-windows10.0.19041.0`, optionally iOS / MacCatalyst) for designing cross-stitch patterns. The goal of the assignment was to practice MAUI, the **MVVM pattern** (CommunityToolkit.Mvvm), data binding, XAML, custom layouts and file system access.
 
-## Funkce
+## Features
 
-1. **Nový vzor** — uživatel zadá šířku a výšku v buňkách a vytvoří se prázdná mřížka.
-2. **Výběr barvy** — `Picker` s nabídkou DMC ("Floss") barev načtených z CSV (`Resources/Raw/threadcolors_dmc_rgb.csv`).
-3. **Kreslení** — klik na buňku ji obarví aktivní barvou; opakovaný klik stejnou barvou ji vymaže (toggle).
-4. **Uložení / načtení** — vzor lze uložit do textového formátu `.csp` / `.txt` a později načíst zpět.
+1. **New pattern** — the user enters width and height in cells and an empty grid is created.
+2. **Color selection** — `Picker` listing DMC ("Floss") colors loaded from a CSV (`Resources/Raw/threadcolors_dmc_rgb.csv`).
+3. **Drawing** — clicking a cell paints it with the active color; clicking again with the same color clears it (toggle).
+4. **Save / load** — a pattern can be saved to a text-based `.csp` / `.txt` file and later loaded back.
 
-## Formát souboru
+## File format
 
-Textový, řádkový, čitelný:
+Plain-text, line-oriented, human-readable:
 
 ```
 SIZE;<width>;<height>
@@ -23,35 +23,35 @@ CELL;<row>;<column>;<dmcFloss>
 ...
 ```
 
-Ukládají se jen vybarvené buňky — prázdné se vynechávají. Při načítání se floss kód mapuje na `ThreadColor` z paletky.
+Only colored cells are persisted — empty ones are omitted. On load the floss code is mapped back to a `ThreadColor` from the palette.
 
-## Architektura (MVVM)
+## Architecture (MVVM)
 
-- **`Models/`** — `Pattern` (2D mřížka `PatternCell`), `PatternCell` (souřadnice + nullable `ThreadColor`), `ThreadColor` (DMC floss kód + RGB).
-- **`ViewModel/MainViewModel.cs`** — `ObservableObject` s `[ObservableProperty]` a `[RelayCommand]` (CommunityToolkit.Mvvm). Drží aktuální vzor, výběr barvy, rozměry a commandy pro New / Save / Load.
-- **`View/MainPage.xaml`** — UI: toolbar (rozměry, Picker barev, Save/Load), `ScrollView` s dynamicky generovanou mřížkou tlačítek.
+- **`Models/`** — `Pattern` (2D grid of `PatternCell`), `PatternCell` (coordinates + nullable `ThreadColor`), `ThreadColor` (DMC floss code + RGB).
+- **`ViewModel/MainViewModel.cs`** — `ObservableObject` with `[ObservableProperty]` and `[RelayCommand]` (CommunityToolkit.Mvvm). Holds the current pattern, selected color, dimensions and commands for New / Save / Load.
+- **`View/MainPage.xaml`** — UI: toolbar (dimensions, color picker, Save/Load), `ScrollView` with a dynamically generated grid of buttons.
 - **`Services/`**
-  - `PatternParser` — serializace `Pattern` ↔ string (CSV-like).
-  - `PatternFileManager` — wrap nad parserem pro práci se soubory.
-  - `ThreadColorCsvLoader` — parsuje balíkovaný CSV s DMC barvami.
+  - `PatternParser` — serializes `Pattern` ↔ string (CSV-like).
+  - `PatternFileManager` — wraps the parser for file IO.
+  - `ThreadColorCsvLoader` — parses the bundled DMC color CSV.
 
-## Prerekvizity
+## Prerequisites
 
-- **.NET 10 SDK** s MAUI workloadem (`dotnet workload install maui`).
-- Pro Windows build: Windows 10 1809+ a Windows App SDK.
+- **.NET 10 SDK** with the MAUI workload (`dotnet workload install maui`).
+- For Windows builds: Windows 10 1809+ and Windows App SDK.
 
-## Spuštění
+## Run
 
-V Rider / Visual Studio otevři `CrossStichDrawer.sln` a spusť `CrossStichDrawer` (Windows Machine).
+In Rider / Visual Studio open `CrossStichDrawer.sln` and run `CrossStichDrawer` (Windows Machine).
 
-Z CLI:
+From the CLI:
 
 ```bash
 dotnet build CrossStichDrawer.sln
 dotnet build CrossStichDrawer/CrossStichDrawer.csproj -t:Run -f net10.0-windows10.0.19041.0
 ```
 
-## Struktura
+## Layout
 
 ```
 CrossStichDrawer/
@@ -62,6 +62,6 @@ CrossStichDrawer/
     ├── ViewModel/   (MainViewModel)
     ├── View/        (MainPage.xaml + code-behind)
     ├── Services/    (PatternParser, PatternFileManager, ThreadColorCsvLoader)
-    ├── Resources/   (DMC barvy CSV, ikony, fonty, splash)
+    ├── Resources/   (DMC color CSV, icons, fonts, splash)
     └── Platforms/   (per-platform startup)
 ```

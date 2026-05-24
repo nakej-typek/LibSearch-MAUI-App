@@ -1,49 +1,49 @@
 # HW01 — Expedition 178
 
-Druhý domácí úkol pro **PB178 Programování v jazyce C#** (FI MUNI, jaro 2026).
-Autor: J. Prosecký.
+Second homework for **PB178 Programming in C#** (FI MUNI, spring 2026).
+Author: J. Prosecký.
 
-Konzolová textová hra v .NET 9, ve které hráč vybere tři dobrodruhy a postupně proti sobě posílá vlny monster. Cílem úkolu bylo procvičit OOP v C#: dědičnost, rozhraní, abstrakce I/O pro testovatelnost, generika, `enum`, primary constructors a LINQ.
+A .NET 9 text-based console game in which the player picks three adventurers and fights successive waves of monsters. The goal of the assignment was to practice OOP in C#: inheritance, interfaces, I/O abstraction for testability, generics, `enum`s, primary constructors and LINQ.
 
-## Hratelnost
+## Gameplay
 
-Hra na začátku vygeneruje šest náhodných dobrodruhů. Hráč si tři z nich vybere příkazem `start X Y Z` a postupně bojuje proti vlnám tří monster. Boj probíhá jako tahový souboj 1v1 podle pořadí v týmu; rychlejší aktér útočí první. Po vítězném boji dobrodruzi získávají XP a levelují, po prohře dostanou kompenzační XP a monstra se uzdraví.
+At startup the game generates six random adventurers. The player picks three with `start X Y Z` and fights successive waves of three monsters. Each fight is a turn-based 1v1 sequence in team order; the faster actor strikes first. After a won fight adventurers gain XP and may level up; after a lost fight they receive a compensation XP and the monsters are healed.
 
-### Příkazy
+### Commands
 
-| Příkaz | Význam |
+| Command | Effect |
 |---|---|
-| `check` | vypíše aktuální vlnu monster |
-| `fight` | spustí boj proti aktuální vlně |
-| `info` | vypíše stav dobrodruhů a počet poražených vln |
-| `sort` | umožní změnit pořadí dobrodruhů |
-| `sus` | velikonoční vajíčko |
-| `quit` | konec hry |
+| `check` | print the current wave of monsters |
+| `fight` | start a fight against the current wave |
+| `info` | print adventurer stats and the number of cleared waves |
+| `sort` | reorder the adventurers |
+| `sus` | easter egg |
+| `quit` | quit the game |
 
-Vítězství nastává po poražení tří vln (`MaxRound = 3`).
+The player wins after clearing three waves (`MaxRound = 3`).
 
-## Architektura
+## Architecture
 
-- **`Actors/`** — `Entity` (základní třída pro vše, co má HP/Attack/Speed), `Adventurer` a `Monster` (dědí z `Entity`), `AttackType` a `MonsterType` enumy.
-- **`Battles/`** — `IBattle` rozhraní a `Battle` implementace, `BattleResult`/`RoundResult` enumy.
-- **`Game/`** — `IGame`/`Game` herní smyčka, `GameConstants` (XP per level, suffixes apod.).
-- **`IO/`** — `IIO` abstrakce I/O s konkrétní konzolovou implementací `MyIio`. Díky této abstrakci jsou herní třídy testovatelné bez `Console`.
+- **`Actors/`** — `Entity` (base class for anything with HP/Attack/Speed), `Adventurer` and `Monster` (derived), `AttackType` and `MonsterType` enums.
+- **`Battles/`** — `IBattle` interface and `Battle` implementation, `BattleResult` / `RoundResult` enums.
+- **`Game/`** — `IGame` / `Game` game loop, `GameConstants` (XP per level, suffixes, etc.).
+- **`IO/`** — `IIO` I/O abstraction with a concrete console implementation `MyIio`. This abstraction makes the game logic unit-testable without touching `Console`.
 
-## Testy
+## Tests
 
-`Expedition178.Tests/` obsahuje xUnit testy zaměřené na herní logiku (boje, leveling, parsing příkazů) s nasazením mock IIO.
+`Expedition178.Tests/` contains xUnit tests focused on game logic (fights, leveling, command parsing) using a mock IIO.
 
 ```bash
 dotnet test Expedition178.sln
 ```
 
-## Spuštění
+## Run
 
 ```bash
 dotnet run --project Expedition178/Expedition178
 ```
 
-## Struktura
+## Layout
 
 ```
 Expedition178/
@@ -53,6 +53,6 @@ Expedition178/
 │   ├── Actors/        (Entity, Adventurer, Monster, AttackType, MonsterType)
 │   ├── Battles/       (Battle + IBattle, RoundResult, BattleResult)
 │   ├── Game/          (Game + IGame, GameConstants)
-│   └── IO/            (IIO + MyIio konzolová implementace, CommandOptions)
+│   └── IO/            (IIO + MyIio console implementation, CommandOptions)
 └── Expedition178.Tests/
 ```
