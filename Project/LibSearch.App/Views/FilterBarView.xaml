@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LibSearch.App.ViewModels"
+             x:Class="LibSearch.App.Views.FilterBarView"
+             x:DataType="vm:FilterStateVm">
+    <Border Style="{StaticResource CardCompact}">
+        <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+            <Grid Grid.Row="0" ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <Picker Grid.Column="0"
+                        Title="Document"
+                        ItemsSource="{Binding Documents}"
+                        ItemDisplayBinding="{Binding Display, x:DataType=vm:DocumentChoice}"
+                        SelectedItem="{Binding SelectedDocument}" />
+                <Picker Grid.Column="1"
+                        Title="Tag"
+                        ItemsSource="{Binding Tags}"
+                        ItemDisplayBinding="{Binding Display, x:DataType=vm:TagChoice}"
+                        SelectedItem="{Binding SelectedTag}"
+                        IsVisible="{Binding ShowTagFilter}" />
+                <Entry Grid.Column="2"
+                       Placeholder="Contains..."
+                       Text="{Binding FreeText}" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                <CheckBox Grid.Column="0" IsChecked="{Binding IsDateFilterActive}" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="Date range:" VerticalOptions="Center" FontSize="13" />
+                <DatePicker Grid.Column="2" Date="{Binding DateFrom}" Format="yyyy-MM-dd" IsEnabled="{Binding IsDateFilterActive}" />
+                <Label Grid.Column="3" Text="—" VerticalOptions="Center" Margin="6,0" />
+                <DatePicker Grid.Column="4" Date="{Binding DateTo}" Format="yyyy-MM-dd" IsEnabled="{Binding IsDateFilterActive}" />
+            </Grid>
+        </Grid>
+    </Border>
+</ContentView>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LibSearch.App.ViewModels"
+             xmlns:services="clr-namespace:LibSearch.App.Services"
+             x:Class="LibSearch.App.Views.StatsPage"
+             x:DataType="vm:StatsViewModel"
+             Title="Stats">
+    <Grid Padding="20,14,20,20" RowDefinitions="Auto,*" RowSpacing="14">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Button Grid.Column="0" Text="← Back" Command="{Binding BackCommand}" Style="{StaticResource GhostButton}" />
+            <Label Grid.Column="1" Text="Stats" Style="{StaticResource SubpageTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="14" MaximumWidthRequest="700">
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Totals" Style="{StaticResource SectionHeading}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="20">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding TotalQueries}" FontSize="28" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource BrandPrimary}, Dark={StaticResource BrandAccent}}" />
+                                <Label Text="Total queries" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="{Binding QueriesToday}" FontSize="28" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource BrandPrimary}, Dark={StaticResource BrandAccent}}" />
+                                <Label Text="Today" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                <Label Text="{Binding SavedPassages}" FontSize="28" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource BrandPrimary}, Dark={StaticResource BrandAccent}}" />
+                                <Label Text="Saved passages" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Top 5 most-searched documents" Style="{StaticResource SectionHeading}" />
+                        <CollectionView ItemsSource="{Binding TopDocuments}" SelectionMode="None">
+                            <CollectionView.EmptyView>
+                                <Label Text="No searches yet." Style="{StaticResource Caption}" />
+                            </CollectionView.EmptyView>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="services:TopDocument">
+                                    <Grid Padding="4,6" ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding Title}" />
+                                        <Label Grid.Column="1" Text="{Binding QueryCount}" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource BrandPrimary}, Dark={StaticResource BrandAccent}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

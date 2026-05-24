@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git check-ignore *)",
+      "Read(//c/Users/JP/RiderProjects/PB178/pb178/**)",
+      "Bash(git -C .. status)"
+    ]
+  }
+}
